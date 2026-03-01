@@ -2,6 +2,8 @@
 
 This project is a Streamlit-based web application that uses an Artificial Neural Network (ANN) to detect fraudulent UPI transactions.
 
+Live Link - https://fraud-detection-analytical-system.streamlit.app/
+
 ## 🚀 Features
 - **Real-Time Fraud Detection**: Instant transaction risk assessment.
 - **AI Intelligence**: Powered by a robust ML model trained on transaction history.
