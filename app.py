@@ -209,67 +209,16 @@ def detection_page():
 
 
 
-def dashboard_page():
-    st.title("📈 Model Performance Dashboard")
-    
-    if os.path.exists("model.pkl"):
-        st.success("✅ Model is trained and loaded.")
-        
-        try:
-            pipeline = load_pipeline()
-            if pipeline is None:
-                st.warning("Could not load pipeline.")
-                return
-            
-            # Extract feature importance from the classifier in the pipeline
-            classifier = pipeline.named_steps['classifier']
-            feature_names = list(pipeline.feature_names_in_)
-            importances = classifier.feature_importances_
-            
-            importance_df = pd.DataFrame({
-                'Feature': feature_names,
-                'Importance': importances
-            }).sort_values(by='Importance', ascending=False)
-            
-            fig = px.bar(
-                importance_df,
-                x='Importance',
-                y='Feature',
-                orientation='h',
-                title="Feature Importance",
-                template="plotly_dark",
-                color='Importance',
-                color_continuous_scale='Reds'
-            )
-            st.plotly_chart(fig, use_container_width=True)
-            
-        except Exception as e:
-            st.warning(f"Could not display feature importance: {e}")
-        
-        if st.button("Retrain Model"):
-            with st.spinner("Retraining model... this may take a while."):
-                import subprocess
-                result = subprocess.run(["python", "model_training.py"], capture_output=True, text=True)
-                if result.returncode == 0:
-                    st.success("✅ Model retrained successfully!")
-                    st.cache_resource.clear()
-                    st.rerun()
-                else:
-                    st.error(f"Training failed: {result.stderr}")
-    else:
-        st.warning("Model not found. Please train the model first by running 'python model_training.py'")
-
 # Navigation
 if 'page' not in st.session_state:
     st.session_state.page = "Home"
 
 st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Home", "Fraud Detection", "Dashboard"], index=["Home", "Fraud Detection", "Dashboard"].index(st.session_state.page))
+page = st.sidebar.radio("Go to", ["Home", "Fraud Detection"], index=["Home", "Fraud Detection"].index(st.session_state.page))
 st.session_state.page = page
 
 if page == "Home":
     home_page()
 elif page == "Fraud Detection":
     detection_page()
-elif page == "Dashboard":
-    dashboard_page()
+
