@@ -597,8 +597,9 @@ st.session_state.page = page
 
 if page == "Home":
     home_page()
-elif page == "Dashboard":
-    dashboard_page()
 elif page == "Fraud Detection":
     detection_page()
+elif page == "Dashboard":
+    dashboard_page()
+
 
