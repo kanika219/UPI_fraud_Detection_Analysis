@@ -234,10 +234,13 @@ def detection_page():
 def dashboard_page():
     st.title("📊 Dashboard & Analytics")
     
-    # Load dataset for EDA
+    # Load dataset for EDA (using sampled version for efficiency)
     @st.cache_data
     def load_dataset():
-        return pd.read_csv('AIML Dataset.csv')
+        try:
+            return pd.read_csv('AIML_Dataset_Sampled.csv')
+        except FileNotFoundError:
+            return pd.read_csv('AIML Dataset.csv')
     
     try:
         df = load_dataset()
