@@ -6,30 +6,14 @@ from tensorflow.keras.models import load_model
 import plotly.graph_objects as go
 import plotly.express as px
 import os
+import warnings
+import tensorflow as tf
+
+# Suppress TensorFlow warnings for cleaner output
+tf.get_logger().setLevel('ERROR')
+warnings.filterwarnings('ignore')
 
 from feature_engineering import BalanceFeatureEngineer
-from sklearn.base import BaseEstimator, TransformerMixin
-
-# Custom Transformer for loading pickled pipelines
-class BalanceFeatureEngineer(BaseEstimator, TransformerMixin):
-    """Create engineered features for balance inconsistency detection."""
-    
-    def fit(self, X, y=None):
-        return self
-    
-    def transform(self, X):
-        X = X.copy()
-        if {'oldbalanceOrg', 'amount', 'newbalanceOrig'}.issubset(X.columns):
-            X['balanceOrigDiff'] = X['oldbalanceOrg'] - X['amount'] - X['newbalanceOrig']
-        else:
-            X['balanceOrigDiff'] = 0.0
-        
-        if {'oldbalanceDest', 'amount', 'newbalanceDest'}.issubset(X.columns):
-            X['balanceDestDiff'] = X['oldbalanceDest'] + X['amount'] - X['newbalanceDest']
-        else:
-            X['balanceDestDiff'] = 0.0
-        
-        return X
 
 # Page Config
 st.set_page_config(page_title="UPI Fraud Guard", layout="wide", page_icon="🛡️")
@@ -93,37 +77,31 @@ def start_training_background():
     threading.Thread(target=_train, daemon=True).start()
 
 
+@st.cache_resource
 def load_artifacts():
     """Load preprocessing pipeline and ANN model.
 
     Returns tuple (preprocessor, ann_model) or (None,None) if missing.
-    Caches result in `st.session_state['artifacts']` so we don't reload repeatedly.
+    Uses st.cache_resource to prevent re-loading on every run.
     """
-    # check session cache first
-    if 'artifacts' in st.session_state:
-        return st.session_state['artifacts']
-
     # ensure files exist before attempting load
     if not os.path.isfile("preprocessor.pkl") or not os.path.isfile("model.h5"):
         # trigger training in background
         st.warning("Model artifacts are not available. Training will start automatically in the background. This may take several minutes.")
         start_training_background()
-        st.session_state['artifacts'] = (None, None)
         return None, None
 
     try:
         preproc = joblib.load("preprocessor.pkl")
     except Exception as e:
         st.error(f"Error loading preprocessing pipeline: {e}")
-        st.session_state['artifacts'] = (None, None)
         return None, None
     try:
         ann = load_model("model.h5")
     except Exception as e:
         st.error(f"Error loading ANN model: {e}")
-        st.session_state['artifacts'] = (None, None)
         return None, None
-    st.session_state['artifacts'] = (preproc, ann)
+    
     return preproc, ann
 
 def home_page():
@@ -257,8 +235,12 @@ def dashboard_page():
     st.title("📊 Dashboard & Analytics")
     
     # Load dataset for EDA
+    @st.cache_data
+    def load_dataset():
+        return pd.read_csv('AIML Dataset.csv')
+    
     try:
-        df = pd.read_csv('AIML Dataset.csv')
+        df = load_dataset()
     except Exception as e:
         st.error(f"Error loading dataset: {e}")
         return
@@ -601,5 +583,8 @@ elif page == "Fraud Detection":
     detection_page()
 elif page == "Dashboard":
     dashboard_page()
+
+if __name__ == "__main__":
+    pass
 
 
