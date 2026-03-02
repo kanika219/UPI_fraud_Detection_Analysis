@@ -5,4 +5,5 @@ scikit-learn>=1.2
 matplotlib
 plotly>=5.0
 joblib>=1.2
-tensorflow>=2.0
+tensorflow-cpu>=2.13.0
+keras>=2.13.0
